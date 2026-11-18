@@ -1,3 +1,9 @@
 {
- "stany": {}
+ "stany": {
+  "d11ca81c8b422eaee21ff136516f39a9": {
+   "stan": "czeka",
+   "kiedy": 1798714800,
+   "zmieniono": 1795015423
+  }
+ }
 }
