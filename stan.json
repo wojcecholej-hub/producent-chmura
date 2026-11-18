@@ -24,6 +24,76 @@
    "kontener": "17917861719552057",
    "uwaga": "z okładką",
    "blad": ""
+  },
+  "1196c1ff6a879d5a301d311ccdd249f0": {
+   "stan": "czeka",
+   "kiedy": 1795107600,
+   "zmieniono": 1795037796
+  },
+  "211aedb85ce0c2f6c93221687a0e8568": {
+   "stan": "czeka",
+   "kiedy": 1795204800,
+   "zmieniono": 1795037796
+  },
+  "412c735bf102c4fa5f922b55277d8234": {
+   "stan": "czeka",
+   "kiedy": 1795194000,
+   "zmieniono": 1795037796
+  },
+  "4795b0d3b58f776ed302f8c63a5a85a7": {
+   "stan": "czeka",
+   "kiedy": 1795075200,
+   "zmieniono": 1795037796
+  },
+  "605a3dde5a59a1cd439d6994d5a1134b": {
+   "stan": "czeka",
+   "kiedy": 1795280400,
+   "zmieniono": 1795037796
+  },
+  "848cab1a1e76b4699ca617597cb3de9d": {
+   "stan": "czeka",
+   "kiedy": 1795172400,
+   "zmieniono": 1795037796
+  },
+  "893390a8a57903d9dbeeb81087bd23ec": {
+   "stan": "czeka",
+   "kiedy": 1795086000,
+   "zmieniono": 1795037796
+  },
+  "8df59f94c0324d2a0c9059eafcf54e05": {
+   "stan": "czeka",
+   "kiedy": 1795258800,
+   "zmieniono": 1795037796
+  },
+  "95f09e08e3cfc828f0da2bd8eaa41904": {
+   "stan": "czeka",
+   "kiedy": 1795096800,
+   "zmieniono": 1795037796
+  },
+  "c74f1055427b0bf3d4cae6b02cc0bdc3": {
+   "stan": "czeka",
+   "kiedy": 1795038600,
+   "zmieniono": 1795037796
+  },
+  "c9a2797650971ee51d50f952ad9656bc": {
+   "stan": "czeka",
+   "kiedy": 1795118400,
+   "zmieniono": 1795037796
+  },
+  "cd527c1d3c2685005987bd54e650ae78": {
+   "stan": "czeka",
+   "kiedy": 1795269600,
+   "zmieniono": 1795037796
+  },
+  "cf45c268b431d23a3c453cafbb62d9d4": {
+   "stan": "czeka",
+   "kiedy": 1795183200,
+   "zmieniono": 1795037796
+  },
+  "fa98e37e44dc7182331d308638a16383": {
+   "stan": "czeka",
+   "kiedy": 1795291200,
+   "zmieniono": 1795037796
   }
  }
 }
