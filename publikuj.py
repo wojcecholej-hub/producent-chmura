@@ -134,7 +134,7 @@ def adres_okladki(w: dict, token: str, jpg: bytes) -> str:
         return ""
 
 
-def przygotuj_kontener(w: dict, token: str) -> str:
+def przygotuj_kontener(w: dict, token: str) -> tuple[str, bool]:
     """Plik z wydania → odszyfrowanie → kontener wznawialny (rupload) → czekanie na FINISHED. Nic nie publikuje."""
     katalog = TU / "_tmp"
     katalog.mkdir(exist_ok=True)
@@ -152,6 +152,7 @@ def przygotuj_kontener(w: dict, token: str) -> str:
             raise
         log(f"Instagram nie przyjął okładki ({e}) – bez niej")
         pola.pop("cover_url")
+        okladka = ""
         k = graph("POST", w["wersja"], f"{w['ig']}/media", token, **pola)
     adres = k.get("uri") or f"https://rupload.facebook.com/ig-api-upload/{w['wersja']}/{k['id']}"
     log(f"wgrywam {len(mp4) // 1048576} MB")
@@ -166,7 +167,7 @@ def przygotuj_kontener(w: dict, token: str) -> str:
     while True:
         s = graph("GET", w["wersja"], k["id"], token, fields="status_code,status")
         if s.get("status_code") == "FINISHED":
-            return k["id"]
+            return k["id"], bool(okladka)
         if s.get("status_code") in ("ERROR", "EXPIRED"):
             raise Blad(f"Instagram odrzucił materiał ({s.get('status_code')}): {s.get('status', '')}")
         if teraz() - start > LIMIT_KONTENERA_S:
@@ -231,7 +232,7 @@ def obrot() -> None:
 
     for id_, w in sorted(wpisy().items(), key=lambda x: x[1]["kiedy"]):
         s = S.get(id_) or {}
-        if s.get("stan") != "czeka" or w["kiedy"] > teraz() + PRZED_S:
+        if s.get("stan") != "czeka" or (w["kiedy"] > teraz() + PRZED_S and not w.get("proba")):
             continue
         token = tokeny.get(w["konto"], "")
         if not token:
@@ -242,7 +243,7 @@ def obrot() -> None:
         zapisz(stan, f"{id_}: tworzy")
         log(f"{id_}: przygotowuję (termin {time.strftime('%d.%m %H:%M', time.localtime(w['kiedy']))})")
         try:
-            kontener = przygotuj_kontener(w, token)
+            kontener, z_okladka = przygotuj_kontener(w, token)
         except Blad as e:
             s.update(stan="blad" if e.pewny else "czeka", blad=f"Instagram nie przyjął rolki: {e}", zmieniono=teraz())
             zapisz(stan, f"{id_}: błąd kontenera")
@@ -250,6 +251,11 @@ def obrot() -> None:
         except Exception as e:  # noqa: BLE001
             s.update(stan="czeka", blad=f"przygotowanie przerwane: {e}"[:300], zmieniono=teraz())
             zapisz(stan, f"{id_}: przerwane")
+            continue
+        if w.get("proba"):  # wpis próbny: sprawdzamy całą drogę do gotowego kontenera, ale NIGDY nie publikujemy
+            s.update(stan="proba-ok", kontener=kontener, uwaga="z okładką" if z_okladka else "bez okładki", blad="", zmieniono=teraz())
+            usun_pliki(id_)
+            zapisz(stan, f"{id_}: próba OK")
             continue
         s.update(stan="kontener", kontener=kontener, zmieniono=teraz())
         zapisz(stan, f"{id_}: kontener gotowy")
