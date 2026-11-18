@@ -249,8 +249,8 @@ NAZWY_STANOW = {"czeka": "czeka", "tworzy": "przygotowuję", "kontener": "gotowa
 def alarmy(stan: dict, W: dict) -> None:
     """Rolka, która nie wyszła, zakłada zgłoszenie (Issue): GitHub wysyła wtedy mail i powiadomienie na telefon.
     Bez treści posta (repozytorium jest publiczne) – tylko termin, numer i przyczyna."""
-    for id_, s in stan.get("stany", {}).items():
-        if s.get("stan") in ZLE and not s.get("zgloszone") and not (W.get(id_) or {}).get("proba"):
+    for id_, s in stan.get("stany", {}).items():  # tylko wpisy z kolejki (wpis usunięty ręcznie albo próbny – bez alarmu)
+        if s.get("stan") in ZLE and not s.get("zgloszone") and id_ in W and not W[id_].get("proba"):
             kiedy = time.strftime("%d.%m %H:%M", time.localtime(s.get("kiedy", 0)))
             r = subprocess.run(["gh", "issue", "create", "-R", REPO, "--title", f"Rolka na {kiedy} nie wyszła ({ZLE[s['stan']]})",
                                 "--body", f"Numer: {id_}\n\n{s.get('blad', '')}\n\nCo zrobić: otwórz Producenta → Kalendarz; "
@@ -264,7 +264,9 @@ def tablica(stan: dict) -> str:
     """README.md: czytelna z telefonu lista – termin, stan, link (bez tytułów i opisów)."""
     wiersze = sorted(stan.get("stany", {}).items(), key=lambda x: x[1].get("kiedy", 0))
     teraz_ = teraz()
-    przyszle = [(i, s) for i, s in wiersze if s.get("kiedy", 0) > teraz_ - 2 * 86400 and s.get("stan") != "proba-ok"]
+    W = wpisy()  # w tablicy: to, co jest w kolejce, i to, co wyszło w ostatnich 2 dniach (bez prób)
+    przyszle = [(i, s) for i, s in wiersze if s.get("kiedy", 0) > teraz_ - 2 * 86400 and s.get("stan") != "proba-ok"
+                and ((i in W and not W[i].get("proba")) or s.get("stan") == "opublikowane")]
     tekst = ["# Producent – kolejka Instagrama", "",
              "Automat publikuje zaplanowane rolki o terminie (laptop może być wyłączony). Treść kolejki jest zaszyfrowana.", "",
              f"Odświeżone: {time.strftime('%d.%m.%Y %H:%M')}", "", "| Termin | Stan | Post |", "|---|---|---|"]
