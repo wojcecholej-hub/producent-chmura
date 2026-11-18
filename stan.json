@@ -9,13 +9,15 @@
    "stan": "blad",
    "kiedy": 1798714800,
    "zmieniono": 1795015636,
-   "blad": "Instagram nie przyjął rolki: wysyłanie pliku: HTTP 400 {\"debug_info\":{\"retriable\":false,\"type\":\"ProcessingFailedError\",\"message\":\"Request processing failed\"}}"
+   "blad": "Instagram nie przyjął rolki: wysyłanie pliku: HTTP 400 {\"debug_info\":{\"retriable\":false,\"type\":\"ProcessingFailedError\",\"message\":\"Request processing failed\"}}",
+   "zgloszone": true
   },
   "db56e77793f47297c51b1e2cd505b46a": {
    "stan": "blad",
    "kiedy": 1798714800,
    "zmieniono": 1795017909,
-   "blad": "Instagram nie przyjął rolki: Instagram 5 razy nie przetworzył wysłanego pliku (ProcessingFailedError)."
+   "blad": "Instagram nie przyjął rolki: Instagram 5 razy nie przetworzył wysłanego pliku (ProcessingFailedError).",
+   "zgloszone": true
   },
   "35568deeb66c7c4e7e6201af2d6a73f9": {
    "stan": "proba-ok",
