@@ -9,10 +9,11 @@ concurrency:
   cancel-in-progress: false
 permissions:
   contents: write
+  actions: write
 jobs:
   obrot:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 355
     steps:
       - uses: actions/checkout@v4
       - run: pip install -q requests
