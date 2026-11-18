@@ -12,7 +12,7 @@
    "blad": "Instagram nie przyjął rolki: wysyłanie pliku: HTTP 400 {\"debug_info\":{\"retriable\":false,\"type\":\"ProcessingFailedError\",\"message\":\"Request processing failed\"}}"
   },
   "db56e77793f47297c51b1e2cd505b46a": {
-   "stan": "tworzy",
+   "stan": "czeka",
    "kiedy": 1798714800,
    "zmieniono": 1795016733
   }
