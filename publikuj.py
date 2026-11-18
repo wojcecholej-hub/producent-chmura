@@ -302,7 +302,42 @@ def obrot() -> None:
         zapisz(stan, f"{id_}: {s['stan']}")
 
 
+CZAS_BIEGU_S = 5 * 3600 + 30 * 60  # GitHub zabija przebieg po 6 h – wcześniej przekazujemy pałeczkę
+
+
+def nastepny_termin() -> int | None:
+    """Najbliższy termin wpisu, który jeszcze czeka (None = kolejka pusta)."""
+    S = wczytaj_stan().get("stany", {})
+    terminy = [w["kiedy"] for i, w in wpisy().items() if (S.get(i) or {}).get("stan", "czeka") == "czeka" and not w.get("proba")]
+    return min(terminy) if terminy else None
+
+
+def czuwaj(start: int) -> None:
+    """Zegar GitHuba (cron) bywa zawodny – 18.11 nie ruszył przez 6 h. Dopóki w kolejce coś czeka, przebieg sam
+    doczekuje do kolejnego terminu (budząc się co 10 min po nowe wpisy), a przed limitem 6 h uruchamia następcę."""
+    while True:
+        t = nastepny_termin()
+        if t is None:
+            log("kolejka pusta – koniec (obudzi mnie nowy plan z Producenta albo cron)")
+            return
+        if teraz() - start > CZAS_BIEGU_S:
+            log("limit czasu przebiegu – uruchamiam następcę")
+            subprocess.run(["gh", "workflow", "run", "publikuj.yml", "-R", REPO], capture_output=True)
+            return
+        czekaj = t - PRZED_S + 60 - teraz()
+        if czekaj > 0:
+            log(f"następny termin {time.strftime('%d.%m %H:%M', time.localtime(t))} – czekam")
+            time.sleep(min(czekaj, 600))
+            pull()
+            if czekaj > 600:
+                continue
+        obrot()
+        time.sleep(30)  # błąd przejściowy zostawia wpis „czeka” – bez tej pauzy pętla kręciłaby się bez przerwy
+
+
 if __name__ == "__main__":
     if not os.environ.get("KLUCZ"):
         sys.exit("Brak sekretu KLUCZ.")
+    start = teraz()
     obrot()
+    czuwaj(start)
