@@ -85,10 +85,11 @@ def anulowany(id_: str) -> bool:
     return (TU / "anuluj" / id_).exists()
 
 
-def usun_pliki(id_: str) -> None:
+def usun_pliki(id_: str, wpis: bool = True) -> None:
+    """Pliki z wydania; wpis=False zostawia wpis w kolejce (spóźniony – żeby panel i alarm go widziały)."""
     for nazwa in (f"{id_}.mp4.enc", f"{id_}.jpg.enc"):
         subprocess.run(["gh", "release", "delete-asset", TAG, nazwa, "-y", "-R", REPO], capture_output=True)
-    for p in (TU / "kolejka" / f"{id_}.enc", TU / "anuluj" / id_):
+    for p in ((TU / "kolejka" / f"{id_}.enc", TU / "anuluj" / id_) if wpis else ()):
         if p.exists():
             p.unlink()
 
@@ -298,7 +299,7 @@ def obrot(start_przebiegu: bool = False) -> None:
             s.update(stan="niepewne", blad="Publikacja przerwana w połowie. Sprawdź na Instagramie, czy post powstał.", zmieniono=t)
         elif s["stan"] == "czeka" and t > w["kiedy"] + w.get("limit_s", 43200):
             s.update(stan="spoznione", blad="Termin minął, a serwer GitHuba nie zdołał opublikować w dozwolonym czasie.", zmieniono=t)
-            usun_pliki(id_)
+            usun_pliki(id_, wpis=False)
         if s["stan"] == "niepewne" and not s.get("sprawdzone") and tokeny.get(w["konto"]):
             s["sprawdzone"] = True
             if jest := juz_jest(w, tokeny[w["konto"]]):
