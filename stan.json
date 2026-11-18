@@ -6,9 +6,10 @@
    "zmieniono": 1795015507
   },
   "5793477367c26cd9b81a0bd144140e5f": {
-   "stan": "tworzy",
+   "stan": "blad",
    "kiedy": 1798714800,
-   "zmieniono": 1795015589
+   "zmieniono": 1795015636,
+   "blad": "Instagram nie przyjął rolki: wysyłanie pliku: HTTP 400 {\"debug_info\":{\"retriable\":false,\"type\":\"ProcessingFailedError\",\"message\":\"Request processing failed\"}}"
   }
  }
 }
