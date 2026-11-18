@@ -18,9 +18,12 @@
    "blad": "Instagram nie przyjął rolki: Instagram 5 razy nie przetworzył wysłanego pliku (ProcessingFailedError)."
   },
   "35568deeb66c7c4e7e6201af2d6a73f9": {
-   "stan": "tworzy",
+   "stan": "proba-ok",
    "kiedy": 1798714800,
-   "zmieniono": 1795018341
+   "zmieniono": 1795018405,
+   "kontener": "17917861719552057",
+   "uwaga": "z okładką",
+   "blad": ""
   }
  }
 }
