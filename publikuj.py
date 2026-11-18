@@ -64,6 +64,7 @@ def zapisz(stan: dict, opis: str, scisle: bool = False) -> bool:
     """Commit + push stan.json. scisle=True: push musi przejść jako pierwszy (bez scalania) – inaczej False
     i wołający sprawdza na nowo (np. czy w międzyczasie nie przyszło „anuluj”)."""
     STAN.write_text(json.dumps(stan, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    (TU / "README.md").write_text(tablica(stan), encoding="utf-8")
     sh("git", "add", "-A")
     if not sh("git", "status", "--porcelain").strip():
         return True
@@ -223,23 +224,85 @@ def wpisy() -> dict[str, dict]:
     return wynik
 
 
-def obrot() -> None:
+MAKS_PROB = 6  # przejściowe błędy (sieć, 5xx) – potem „błąd” i alarm
+
+
+def juz_jest(w: dict, token: str) -> dict | None:
+    """Czy rolka z tym opisem już jest na Instagramie (po przerwanej publikacji). Porównanie początku opisu."""
+    try:
+        d = graph("GET", w["wersja"], f"{w['ig']}/media", token, fields="id,caption,permalink,timestamp", limit="15")
+    except Blad:
+        return None
+    poczatek = (w.get("opis") or "").strip()[:80]
+    for m in d.get("data", []):
+        if poczatek and (m.get("caption") or "").strip()[:80] == poczatek:
+            return {"stan": "opublikowane", "media": m["id"], "link": m.get("permalink", ""), "blad": "",
+                    "uwaga": "Publikacja była przerwana, ale post jest na Instagramie (sprawdzone)."}
+    return None
+
+
+ZLE = {"blad": "błąd", "niepewne": "niepewne", "spoznione": "spóźnione"}
+NAZWY_STANOW = {"czeka": "czeka", "tworzy": "przygotowuję", "kontener": "gotowa, czeka na godzinę", "publikuje": "publikuję",
+                "opublikowane": "opublikowana", "anulowane": "anulowana", "proba-ok": "próba OK", **ZLE}
+
+
+def alarmy(stan: dict, W: dict) -> None:
+    """Rolka, która nie wyszła, zakłada zgłoszenie (Issue): GitHub wysyła wtedy mail i powiadomienie na telefon.
+    Bez treści posta (repozytorium jest publiczne) – tylko termin, numer i przyczyna."""
+    for id_, s in stan.get("stany", {}).items():
+        if s.get("stan") in ZLE and not s.get("zgloszone") and not (W.get(id_) or {}).get("proba"):
+            kiedy = time.strftime("%d.%m %H:%M", time.localtime(s.get("kiedy", 0)))
+            r = subprocess.run(["gh", "issue", "create", "-R", REPO, "--title", f"Rolka na {kiedy} nie wyszła ({ZLE[s['stan']]})",
+                                "--body", f"Numer: {id_}\n\n{s.get('blad', '')}\n\nCo zrobić: otwórz Producenta → Kalendarz; "
+                                          "stan tej pozycji jest już przy niej. Po poprawce zamknij to zgłoszenie."],
+                               capture_output=True)
+            if r.returncode == 0:
+                s["zgloszone"] = True
+
+
+def tablica(stan: dict) -> str:
+    """README.md: czytelna z telefonu lista – termin, stan, link (bez tytułów i opisów)."""
+    wiersze = sorted(stan.get("stany", {}).items(), key=lambda x: x[1].get("kiedy", 0))
+    teraz_ = teraz()
+    przyszle = [(i, s) for i, s in wiersze if s.get("kiedy", 0) > teraz_ - 2 * 86400 and s.get("stan") != "proba-ok"]
+    tekst = ["# Producent – kolejka Instagrama", "",
+             "Automat publikuje zaplanowane rolki o terminie (laptop może być wyłączony). Treść kolejki jest zaszyfrowana.", "",
+             f"Odświeżone: {time.strftime('%d.%m.%Y %H:%M')}", "", "| Termin | Stan | Post |", "|---|---|---|"]
+    for i, s in przyszle:
+        znak = "⚠️ " if s.get("stan") in ZLE else ("✅ " if s.get("stan") == "opublikowane" else "")
+        link = f"[otwórz]({s['link']})" if s.get("link") else ""
+        lt = time.localtime(s.get('kiedy', 0))
+        tekst.append(f"| {('pon', 'wt', 'śr', 'czw', 'pt', 'sob', 'nd')[lt.tm_wday]} {time.strftime('%d.%m %H:%M', lt)} | {znak}{NAZWY_STANOW.get(s.get('stan'), s.get('stan'))} | {link} |")
+    return "\n".join(tekst) + "\n"
+
+
+def obrot(start_przebiegu: bool = False) -> None:
+    """start_przebiegu=True: działa tylko ten przebieg (concurrency), więc „tworzy”, „kontener” i „publikuje”
+    zostały po martwym poprzedniku – od razu, bez czekania 40 minut."""
     tokeny = json.loads(os.environ.get("META_TOKENY") or "{}")
     stan = wczytaj_stan()
     S = stan.setdefault("stany", {})
     t = teraz()
-    for id_, w in wpisy().items():
+    prog = 0 if start_przebiegu else ZAWIESZONE_S
+    W = wpisy()
+    for id_, w in W.items():
         s = S.setdefault(id_, {"stan": "czeka", "kiedy": w["kiedy"], "zmieniono": t})
         if s["stan"] in ("czeka", "kontener") and anulowany(id_):
             s.update(stan="anulowane", zmieniono=t)
             usun_pliki(id_)
-        elif s["stan"] == "tworzy" and t - s.get("zmieniono", t) > ZAWIESZONE_S:
-            s.update(stan="czeka", zmieniono=t)
-        elif s["stan"] == "publikuje" and t - s.get("zmieniono", t) > ZAWIESZONE_S:
+        elif s["stan"] in ("tworzy", "kontener") and t - s.get("zmieniono", t) > prog and not (s["stan"] == "kontener" and not start_przebiegu):
+            s.update(stan="czeka", zmieniono=t)  # kontener bez publikacji można założyć od nowa – post na pewno nie powstał
+        elif s["stan"] == "publikuje" and t - s.get("zmieniono", t) > prog:
             s.update(stan="niepewne", blad="Publikacja przerwana w połowie. Sprawdź na Instagramie, czy post powstał.", zmieniono=t)
         elif s["stan"] == "czeka" and t > w["kiedy"] + w.get("limit_s", 43200):
             s.update(stan="spoznione", blad="Termin minął, a serwer GitHuba nie zdołał opublikować w dozwolonym czasie.", zmieniono=t)
             usun_pliki(id_)
+        if s["stan"] == "niepewne" and not s.get("sprawdzone") and tokeny.get(w["konto"]):
+            s["sprawdzone"] = True
+            if jest := juz_jest(w, tokeny[w["konto"]]):
+                s.update(**jest, zmieniono=t)
+                usun_pliki(id_)
+    alarmy(stan, W)
     zapisz(stan, "obrót: porządki")
 
     for id_, w in sorted(wpisy().items(), key=lambda x: x[1]["kiedy"]):
@@ -256,13 +319,16 @@ def obrot() -> None:
         log(f"{id_}: przygotowuję (termin {time.strftime('%d.%m %H:%M', time.localtime(w['kiedy']))})")
         try:
             kontener, z_okladka = przygotuj_kontener(w, token)
-        except Blad as e:
-            s.update(stan="blad" if e.pewny else "czeka", blad=f"Instagram nie przyjął rolki: {e}", zmieniono=teraz())
-            zapisz(stan, f"{id_}: błąd kontenera")
-            continue
         except Exception as e:  # noqa: BLE001
-            s.update(stan="czeka", blad=f"przygotowanie przerwane: {e}"[:300], zmieniono=teraz())
-            zapisz(stan, f"{id_}: przerwane")
+            proby = s.get("proby", 0) + 1
+            pewny = isinstance(e, Blad) and e.pewny
+            if isinstance(e, Blad) and e.kod == 190:
+                tekst = "Token Meta wygasł albo został cofnięty – w Producencie: Połączenia → połącz konto ponownie."
+            else:
+                tekst = f"Instagram nie przyjął rolki: {e}"[:300]
+            s.update(stan="blad" if pewny or proby >= MAKS_PROB else "czeka", proby=proby, blad=tekst, zmieniono=teraz())
+            alarmy(stan, wpisy())
+            zapisz(stan, f"{id_}: błąd kontenera")
             continue
         if w.get("proba"):  # wpis próbny: sprawdzamy całą drogę do gotowego kontenera, ale NIGDY nie publikujemy
             s.update(stan="proba-ok", kontener=kontener, uwaga="z okładką" if z_okladka else "bez okładki", blad="", zmieniono=teraz())
@@ -299,6 +365,7 @@ def obrot() -> None:
             s.update(stan="niepewne" if not e.pewny else "blad", zmieniono=teraz(),
                      blad=f"Instagram nie opublikował: {e}" + ("" if e.pewny else " Sprawdź na Instagramie, czy post powstał."))
         log(f"{id_}: {s['stan']} {s.get('link', '')}")
+        alarmy(stan, wpisy())
         zapisz(stan, f"{id_}: {s['stan']}")
 
 
@@ -321,8 +388,7 @@ def czuwaj(start: int) -> None:
             log("kolejka pusta – koniec (obudzi mnie nowy plan z Producenta albo cron)")
             return
         if teraz() - start > CZAS_BIEGU_S:
-            log("limit czasu przebiegu – uruchamiam następcę")
-            subprocess.run(["gh", "workflow", "run", "publikuj.yml", "-R", REPO], capture_output=True)
+            log("limit czasu przebiegu – następcę uruchomi krok „Następca”")
             return
         czekaj = t - PRZED_S + 60 - teraz()
         if czekaj > 0:
@@ -338,6 +404,30 @@ def czuwaj(start: int) -> None:
 if __name__ == "__main__":
     if not os.environ.get("KLUCZ"):
         sys.exit("Brak sekretu KLUCZ.")
+    if sys.argv[1:] == ["nastepca"]:  # krok „always”: po końcu, awarii albo limicie czasu – kolejny przebieg, gdy coś czeka
+        if nastepny_termin() is not None:
+            # bezpiecznik: przebieg, który padł w pierwszych minutach, nie startuje następcy w kółko – zgłoszenie zamiast pętli
+            r = subprocess.run(["gh", "run", "view", os.environ.get("GITHUB_RUN_ID", ""), "-R", REPO, "--json", "createdAt",
+                                "-q", ".createdAt"], capture_output=True, text=True)
+            try:
+                import calendar
+                trwal = teraz() - calendar.timegm(time.strptime(r.stdout.strip(), "%Y-%m-%dT%H:%M:%SZ"))
+            except ValueError:
+                trwal = 9999
+            if trwal < 240:
+                tytul = "Automat pada zaraz po starcie"
+                lista = subprocess.run(["gh", "issue", "list", "-R", REPO, "--state", "open", "--search", tytul, "--json", "number"],
+                                       capture_output=True, text=True).stdout
+                if lista.strip() in ("", "[]"):
+                    subprocess.run(["gh", "issue", "create", "-R", REPO, "--title", tytul, "--body",
+                                    "Przebieg skończył się w ciągu kilku minut, a w kolejce coś czeka. Następca NIE został uruchomiony, "
+                                    "żeby nie kręcić się w kółko. Zapasowo ruszy cron albo plan z Producenta. Szczegóły: zakładka Actions."],
+                                   capture_output=True)
+                log("przebieg zbyt krótki – bez następcy (zgłoszenie)")
+            else:
+                subprocess.run(["gh", "workflow", "run", "publikuj.yml", "-R", REPO], capture_output=True)
+                log("w kolejce coś czeka – uruchomiony następca")
+        sys.exit(0)
     start = teraz()
-    obrot()
+    obrot(start_przebiegu=True)
     czuwaj(start)
