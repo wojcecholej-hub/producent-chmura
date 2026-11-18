@@ -134,10 +134,29 @@ def adres_okladki(w: dict, token: str, jpg: bytes) -> str:
         return ""
 
 
+def wgraj(adres: str, mp4: bytes, token: str) -> bool:
+    """Wgrywanie po 8 MB (offset). True = przyjęte; False = ProcessingFailedError (spróbować z nowym kontenerem)."""
+    kawalek = 8 * 1024 * 1024
+    for offset in range(0, len(mp4), kawalek):
+        try:
+            odp = requests.post(adres, data=mp4[offset:offset + kawalek], timeout=(15, 600),
+                                headers={"Authorization": f"OAuth {token}", "offset": str(offset), "file_size": str(len(mp4))})
+        except requests.RequestException as e:
+            raise Blad(f"wysyłanie pliku przerwane ({type(e).__name__})") from None
+        if odp.status_code == 206 and offset + kawalek < len(mp4):
+            continue
+        if odp.status_code == 200:
+            return True
+        if "ProcessingFailed" in odp.text:
+            return False
+        raise Blad(f"wysyłanie pliku: HTTP {odp.status_code} {odp.text[:200]}")
+    return False
+
+
 def przygotuj_kontener(w: dict, token: str) -> tuple[str, bool]:
     """Plik z wydania → odszyfrowanie → kontener wznawialny (rupload) → czekanie na FINISHED. Nic nie publikuje."""
-    katalog = TU / "_tmp"
-    katalog.mkdir(exist_ok=True)
+    import tempfile
+    katalog = Path(tempfile.mkdtemp(prefix="pobrane-"))  # poza repozytorium: pliki nie mogą trafić do commita
     sh("gh", "release", "download", TAG, "-p", f"{w['id']}.*", "-D", str(katalog), "--clobber", "-R", REPO)
     mp4 = odszyfruj((katalog / f"{w['id']}.mp4.enc").read_bytes())
     okladka = ""
@@ -145,27 +164,25 @@ def przygotuj_kontener(w: dict, token: str) -> tuple[str, bool]:
         okladka = adres_okladki(w, token, odszyfruj((katalog / f"{w['id']}.jpg.enc").read_bytes()))
     pola = {"media_type": "REELS", "upload_type": "resumable", "caption": w["opis"], "share_to_feed": "true",
             **({"cover_url": okladka} if okladka else {}), **(w.get("dodatki") or {})}
-    try:
-        k = graph("POST", w["wersja"], f"{w['ig']}/media", token, **pola)
-    except Blad as e:
-        if not okladka or not e.pewny:
-            raise
-        log(f"Instagram nie przyjął okładki ({e}) – bez niej")
-        pola.pop("cover_url")
-        okladka = ""
-        k = graph("POST", w["wersja"], f"{w['ig']}/media", token, **pola)
-    adres = k.get("uri") or f"https://rupload.facebook.com/ig-api-upload/{w['wersja']}/{k['id']}"
-    log(f"wgrywam {len(mp4) // 1048576} MB")
-    kawalek = 20 * 1024 * 1024  # duże rolki jednym zapytaniem Instagram odrzuca (ProcessingFailedError) – po 20 MB
-    for offset in range(0, len(mp4), kawalek):
+    for proba in range(1, 6):
         try:
-            odp = requests.post(adres, data=mp4[offset:offset + kawalek], timeout=(15, 600),
-                                headers={"Authorization": f"OAuth {token}", "offset": str(offset), "file_size": str(len(mp4))})
-        except requests.RequestException as e:
-            raise Blad(f"wysyłanie pliku przerwane ({type(e).__name__})") from None
-        ostatni = offset + kawalek >= len(mp4)
-        if not (odp.status_code == 200 or (odp.status_code == 206 and not ostatni)):
-            raise Blad(f"wysyłanie pliku: HTTP {odp.status_code} {odp.text[:200]}")
+            k = graph("POST", w["wersja"], f"{w['ig']}/media", token, **pola)
+        except Blad as e:
+            if not okladka or not e.pewny:
+                raise
+            log(f"Instagram nie przyjął okładki ({e}) – bez niej")
+            pola.pop("cover_url")
+            okladka = ""
+            k = graph("POST", w["wersja"], f"{w['ig']}/media", token, **pola)
+        adres = k.get("uri") or f"https://rupload.facebook.com/ig-api-upload/{w['wersja']}/{k['id']}"
+        log(f"wgrywam {len(mp4) // 1048576} MB (próba {proba})")
+        if wgraj(adres, mp4, token):
+            break
+        # 18.11.2026: rupload losowo kończy ProcessingFailedError (ten sam plik raz przechodzi, raz nie) – nowy kontener
+        log("Instagram: ProcessingFailedError – zakładam nowy kontener")
+        time.sleep(20)
+    else:
+        raise Blad("Instagram 5 razy nie przetworzył wysłanego pliku (ProcessingFailedError).")
     start = teraz()
     while True:
         s = graph("GET", w["wersja"], k["id"], token, fields="status_code,status")
