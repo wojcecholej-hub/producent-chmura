@@ -122,77 +122,69 @@ def graph(metoda: str, wersja: str, sciezka: str, token: str, **pola) -> dict:
     return dane
 
 
-def adres_okladki(w: dict, token: str, jpg: bytes) -> str:
-    """Instagram bierze okładkę tylko z publicznego adresu: nieopublikowane zdjęcie na Stronie Facebooka."""
-    try:
-        z = graph("POST", w["wersja"], f"{w['strona']}/photos", token, published="false",
-                  _pliki={"source": ("okladka.jpg", jpg, "image/jpeg")})
-        obrazy = graph("GET", w["wersja"], z["id"], token, fields="images").get("images") or []
-        return max(obrazy, key=lambda o: o.get("width", 0) * o.get("height", 0))["source"] if obrazy else ""
-    except Blad as e:
-        log(f"okładka nie przeszła ({e}) – rolka bez niej")
-        return ""
+PUBLICZNE = "publiczne"  # wydanie na pliki wystawiane na kilka minut, żeby Instagram je pobrał (video_url, cover_url)
 
 
-def wgraj(adres: str, mp4: bytes, token: str) -> bool:
-    """Wgrywanie po 8 MB (offset). True = przyjęte; False = ProcessingFailedError (spróbować z nowym kontenerem)."""
-    kawalek = 8 * 1024 * 1024
-    for offset in range(0, len(mp4), kawalek):
-        try:
-            odp = requests.post(adres, data=mp4[offset:offset + kawalek], timeout=(15, 600),
-                                headers={"Authorization": f"OAuth {token}", "offset": str(offset), "file_size": str(len(mp4))})
-        except requests.RequestException as e:
-            raise Blad(f"wysyłanie pliku przerwane ({type(e).__name__})") from None
-        if odp.status_code == 206 and offset + kawalek < len(mp4):
-            continue
-        if odp.status_code == 200:
-            return True
-        if "ProcessingFailed" in odp.text:
-            return False
-        raise Blad(f"wysyłanie pliku: HTTP {odp.status_code} {odp.text[:200]}")
-    return False
+def wystaw(plik: Path) -> str:
+    """Odszyfrowany plik pod losową nazwą w publicznym wydaniu; adres do pobrania dla Instagrama."""
+    if subprocess.run(["gh", "release", "view", PUBLICZNE, "-R", REPO], capture_output=True).returncode:
+        subprocess.run(["gh", "release", "create", PUBLICZNE, "-R", REPO, "--title", PUBLICZNE,
+                        "--notes", "Pliki na kilka minut przed publikacją (Instagram pobiera je przez adres)."], capture_output=True)
+    sh("gh", "release", "upload", PUBLICZNE, str(plik), "--clobber", "-R", REPO)
+    return f"https://github.com/{REPO}/releases/download/{PUBLICZNE}/{plik.name}"
+
+
+def schowaj(nazwy: list[str]) -> None:
+    for n in nazwy:
+        subprocess.run(["gh", "release", "delete-asset", PUBLICZNE, n, "-y", "-R", REPO], capture_output=True)
 
 
 def przygotuj_kontener(w: dict, token: str) -> tuple[str, bool]:
-    """Plik z wydania → odszyfrowanie → kontener wznawialny (rupload) → czekanie na FINISHED. Nic nie publikuje."""
+    """Plik z wydania → odszyfrowanie → publiczny adres na kilka minut → kontener z video_url → FINISHED → plik znika.
+    18.11.2026: wgrywanie bezpośrednie (rupload) psuje się przy rolkach dłuższych niż ok. 30 s (ProcessingFailedError),
+    pobieranie przez adres działa. Nic nie publikuje."""
+    import secrets
     import tempfile
     katalog = Path(tempfile.mkdtemp(prefix="pobrane-"))  # poza repozytorium: pliki nie mogą trafić do commita
     sh("gh", "release", "download", TAG, "-p", f"{w['id']}.*", "-D", str(katalog), "--clobber", "-R", REPO)
-    mp4 = odszyfruj((katalog / f"{w['id']}.mp4.enc").read_bytes())
-    okladka = ""
-    if (katalog / f"{w['id']}.jpg.enc").exists():
-        okladka = adres_okladki(w, token, odszyfruj((katalog / f"{w['id']}.jpg.enc").read_bytes()))
-    pola = {"media_type": "REELS", "upload_type": "resumable", "caption": w["opis"], "share_to_feed": "true",
-            **({"cover_url": okladka} if okladka else {}), **(w.get("dodatki") or {})}
-    for proba in range(1, 6):
-        try:
-            k = graph("POST", w["wersja"], f"{w['ig']}/media", token, **pola)
-        except Blad as e:
-            if not okladka or not e.pewny:
-                raise
-            log(f"Instagram nie przyjął okładki ({e}) – bez niej")
-            pola.pop("cover_url")
-            okladka = ""
-            k = graph("POST", w["wersja"], f"{w['ig']}/media", token, **pola)
-        adres = k.get("uri") or f"https://rupload.facebook.com/ig-api-upload/{w['wersja']}/{k['id']}"
-        log(f"wgrywam {len(mp4) // 1048576} MB (próba {proba})")
-        if wgraj(adres, mp4, token):
-            break
-        # 18.11.2026: rupload losowo kończy ProcessingFailedError (ten sam plik raz przechodzi, raz nie) – nowy kontener
-        log("Instagram: ProcessingFailedError – zakładam nowy kontener")
-        time.sleep(20)
-    else:
-        raise Blad("Instagram 5 razy nie przetworzył wysłanego pliku (ProcessingFailedError).")
-    start = teraz()
-    while True:
-        s = graph("GET", w["wersja"], k["id"], token, fields="status_code,status")
-        if s.get("status_code") == "FINISHED":
-            return k["id"], bool(okladka)
-        if s.get("status_code") in ("ERROR", "EXPIRED"):
-            raise Blad(f"Instagram odrzucił materiał ({s.get('status_code')}): {s.get('status', '')}")
-        if teraz() - start > LIMIT_KONTENERA_S:
-            raise Blad("Instagram nie przetworzył wideo w 30 minut. Post nie powstał.")
-        time.sleep(15)
+    los = secrets.token_hex(16)
+    mp4 = katalog / f"{los}.mp4"
+    mp4.write_bytes(odszyfruj((katalog / f"{w['id']}.mp4.enc").read_bytes()))
+    wystawione = [mp4.name]
+    try:
+        pola = {"media_type": "REELS", "video_url": wystaw(mp4), "caption": w["opis"], "share_to_feed": "true",
+                **(w.get("dodatki") or {})}
+        if (katalog / f"{w['id']}.jpg.enc").exists():
+            jpg = katalog / f"{los}.jpg"
+            jpg.write_bytes(odszyfruj((katalog / f"{w['id']}.jpg.enc").read_bytes()))
+            pola["cover_url"] = wystaw(jpg)
+            wystawione.append(jpg.name)
+        for proba in range(1, 4):
+            try:
+                k = graph("POST", w["wersja"], f"{w['ig']}/media", token, **pola)
+            except Blad as e:
+                if "cover_url" not in pola or not e.pewny:
+                    raise
+                log(f"Instagram nie przyjął okładki ({e}) – bez niej")
+                pola.pop("cover_url")
+                k = graph("POST", w["wersja"], f"{w['ig']}/media", token, **pola)
+            log(f"kontener {k['id']} (próba {proba}), Instagram pobiera plik")
+            start = teraz()
+            while True:
+                s = graph("GET", w["wersja"], k["id"], token, fields="status_code,status")
+                kod = s.get("status_code")
+                if kod == "FINISHED":
+                    return k["id"], "cover_url" in pola
+                if kod in ("ERROR", "EXPIRED"):
+                    log(f"Instagram: {kod} {s.get('status', '')}")
+                    break
+                if teraz() - start > LIMIT_KONTENERA_S:
+                    raise Blad("Instagram nie przetworzył wideo w 30 minut. Post nie powstał.")
+                time.sleep(15)
+            time.sleep(20)
+        raise Blad(f"Instagram 3 razy odrzucił materiał: {s.get('status', '')}")
+    finally:
+        schowaj(wystawione)
 
 
 def opublikuj(w: dict, kontener: str, token: str) -> dict:
