@@ -156,13 +156,16 @@ def przygotuj_kontener(w: dict, token: str) -> tuple[str, bool]:
         k = graph("POST", w["wersja"], f"{w['ig']}/media", token, **pola)
     adres = k.get("uri") or f"https://rupload.facebook.com/ig-api-upload/{w['wersja']}/{k['id']}"
     log(f"wgrywam {len(mp4) // 1048576} MB")
-    try:
-        odp = requests.post(adres, data=mp4, timeout=(15, 900),
-                            headers={"Authorization": f"OAuth {token}", "offset": "0", "file_size": str(len(mp4))})
-    except requests.RequestException as e:
-        raise Blad(f"wysyłanie pliku przerwane ({type(e).__name__})") from None
-    if odp.status_code != 200:
-        raise Blad(f"wysyłanie pliku: HTTP {odp.status_code} {odp.text[:200]}")
+    kawalek = 20 * 1024 * 1024  # duże rolki jednym zapytaniem Instagram odrzuca (ProcessingFailedError) – po 20 MB
+    for offset in range(0, len(mp4), kawalek):
+        try:
+            odp = requests.post(adres, data=mp4[offset:offset + kawalek], timeout=(15, 600),
+                                headers={"Authorization": f"OAuth {token}", "offset": str(offset), "file_size": str(len(mp4))})
+        except requests.RequestException as e:
+            raise Blad(f"wysyłanie pliku przerwane ({type(e).__name__})") from None
+        ostatni = offset + kawalek >= len(mp4)
+        if not (odp.status_code == 200 or (odp.status_code == 206 and not ostatni)):
+            raise Blad(f"wysyłanie pliku: HTTP {odp.status_code} {odp.text[:200]}")
     start = teraz()
     while True:
         s = graph("GET", w["wersja"], k["id"], token, fields="status_code,status")
