@@ -1,29 +1,39 @@
-# Producent: Instagram bez włączonego komputera. Co 5 minut sprawdza kolejkę i publikuje rolki o terminie.
+# Producent: Instagram bez włączonego komputera. Publikuje zaplanowane rolki o terminie.
+# Wyzwalacze: nowy wpis w kolejce (push z Producenta), ręcznie / z Producenta, cron (zapasowy – bywa zawodny),
+# a póki coś czeka, przebieg czuwa sam i przed limitem 6 h uruchamia następcę.
 name: publikuj
 on:
   schedule:
-    - cron: "2-59/5 * * * *"
+    - cron: "2-59/15 * * * *"
   workflow_dispatch:
+  push:
+    paths: ["kolejka/**", "anuluj/**"]
 concurrency:
   group: publikuj
   cancel-in-progress: false
 permissions:
   contents: write
   actions: write
+  issues: write
 jobs:
   obrot:
     runs-on: ubuntu-latest
     timeout-minutes: 355
+    env:
+      KLUCZ: ${{ secrets.KLUCZ }}
+      META_TOKENY: ${{ secrets.META_TOKENY }}
+      GH_TOKEN: ${{ github.token }}
+      TZ: Europe/Warsaw
     steps:
       - uses: actions/checkout@v4
       - run: pip install -q requests
       - name: Obrót kolejki
-        env:
-          KLUCZ: ${{ secrets.KLUCZ }}
-          META_TOKENY: ${{ secrets.META_TOKENY }}
-          GH_TOKEN: ${{ github.token }}
-          TZ: Europe/Warsaw
         run: |
           git config user.name "producent-chmura"
           git config user.email "producent-chmura@users.noreply.github.com"
           python publikuj.py
+      - name: Następca
+        if: always()
+        run: |
+          git pull -q --rebase origin HEAD || true
+          python publikuj.py nastepca
