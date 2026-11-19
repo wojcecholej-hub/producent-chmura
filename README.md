@@ -10,7 +10,7 @@ Odświeżone: 19.11.2026 18:00
 | czw 19.11 09:00 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/Df6j1mGHDOO/) |
 | czw 19.11 12:00 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/Df64WvilVXX/) |
 | czw 19.11 15:00 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/Df7M91DDnks/) |
-| czw 19.11 18:00 | publikuję |  |
+| czw 19.11 18:00 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/Df7hj1FDC3s/) |
 | czw 19.11 21:00 | czeka |  |
 | pt 20.11 12:00 | czeka |  |
 | pt 20.11 15:00 | czeka |  |
