@@ -8,7 +8,7 @@ Odświeżone: 19.11.2026 11:36
 |---|---|---|
 | śr 18.11 22:50 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/Df5fLFQj4pV/) |
 | czw 19.11 09:00 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/Df6j1mGHDOO/) |
-| czw 19.11 12:00 | czeka |  |
+| czw 19.11 12:00 | przygotowuję |  |
 | czw 19.11 15:00 | czeka |  |
 | czw 19.11 18:00 | czeka |  |
 | czw 19.11 21:00 | czeka |  |
