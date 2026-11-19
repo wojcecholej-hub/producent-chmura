@@ -2,12 +2,12 @@
 
 Automat publikuje zaplanowane rolki o terminie (laptop może być wyłączony). Treść kolejki jest zaszyfrowana.
 
-Odświeżone: 19.11.2026 08:37
+Odświeżone: 19.11.2026 09:00
 
 | Termin | Stan | Post |
 |---|---|---|
 | śr 18.11 22:50 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/Df5fLFQj4pV/) |
-| czw 19.11 09:00 | gotowa, czeka na godzinę |  |
+| czw 19.11 09:00 | publikuję |  |
 | czw 19.11 12:00 | czeka |  |
 | czw 19.11 15:00 | czeka |  |
 | czw 19.11 18:00 | czeka |  |
