@@ -13,7 +13,7 @@ Odświeżone: 20.11.2026 14:36
 | czw 19.11 18:00 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/Df7hj1FDC3s/) |
 | czw 19.11 21:00 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/Df72KRKD5SU/) |
 | pt 20.11 12:00 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/Df9dKHcig3L/) |
-| pt 20.11 15:00 | czeka |  |
+| pt 20.11 15:00 | przygotowuję |  |
 | pt 20.11 18:00 | czeka |  |
 | pt 20.11 21:00 | czeka |  |
 | sob 21.11 12:00 | czeka |  |
