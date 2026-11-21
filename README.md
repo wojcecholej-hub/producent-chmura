@@ -15,7 +15,7 @@ Odświeżone: 21.11.2026 20:36
 | sob 21.11 12:00 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/DgAB9W2DlGY/) |
 | sob 21.11 15:00 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/DgAWjjSiasU/) |
 | sob 21.11 18:00 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/DgArKRMDo5J/) |
-| sob 21.11 21:00 | przygotowuję |  |
+| sob 21.11 21:00 | gotowa, czeka na godzinę |  |
 | nd 22.11 14:00 | czeka |  |
 | nd 22.11 17:00 | czeka |  |
 | nd 22.11 20:00 | czeka |  |
