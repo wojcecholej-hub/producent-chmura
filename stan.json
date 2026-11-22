@@ -263,9 +263,19 @@
    "blad": ""
   },
   "7eb57fbb33eef8366dd3305dc29bbb09": {
-   "stan": "czeka",
+   "stan": "anulowane",
    "kiedy": 1795716000,
-   "zmieniono": 1795302066
+   "zmieniono": 1795382205
+  },
+  "219a5c07734a9c1a2297f4a6662d304d": {
+   "stan": "czeka",
+   "kiedy": 1795415400,
+   "zmieniono": 1795382205
+  },
+  "a067e2bb16e8e42c2786bfc61e4fc979": {
+   "stan": "anulowane",
+   "kiedy": 1795413600,
+   "zmieniono": 1795382205
   }
  }
 }
