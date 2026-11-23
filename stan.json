@@ -168,9 +168,10 @@
    "blad": ""
   },
   "384850c17e306a2a08458cf971d3861e": {
-   "stan": "tworzy",
+   "stan": "kontener",
    "kiedy": 1795453200,
-   "zmieniono": 1795451778
+   "zmieniono": 1795451847,
+   "kontener": "17918576184552057"
   },
   "57f3600b25b747805281f3168098d064": {
    "stan": "opublikowane",
