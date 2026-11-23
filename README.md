@@ -11,7 +11,7 @@ Odświeżone: 23.11.2026 18:00
 | nd 22.11 17:00 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/DgDL2lzk3AM/) |
 | nd 22.11 17:00 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/DgDJE5rgQXF/) |
 | nd 22.11 20:00 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/DgDdqtaFGrH/) |
-| pon 23.11 18:00 | publikuję |  |
+| pon 23.11 18:00 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/DgF0y1yE7lB/) |
 | czw 26.11 18:00 | czeka |  |
 | czw 03.12 10:00 | czeka |  |
 | czw 03.12 18:00 | czeka |  |
