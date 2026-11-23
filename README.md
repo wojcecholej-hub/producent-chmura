@@ -2,11 +2,10 @@
 
 Automat publikuje zaplanowane rolki o terminie (laptop może być wyłączony). Treść kolejki jest zaszyfrowana.
 
-Odświeżone: 23.11.2026 14:49
+Odświeżone: 23.11.2026 17:36
 
 | Termin | Stan | Post |
 |---|---|---|
-| sob 21.11 15:00 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/DgAWjjSiasU/) |
 | sob 21.11 18:00 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/DgArKRMDo5J/) |
 | sob 21.11 21:00 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/DgA_vMJG53B/) |
 | nd 22.11 14:00 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/DgC0ljAkshe/) |
@@ -43,6 +42,7 @@ Odświeżone: 23.11.2026 14:49
 | czw 15.04 18:00 | czeka |  |
 | czw 22.04 18:00 | czeka |  |
 | czw 29.04 18:00 | czeka |  |
+| czw 06.05 18:00 | czeka |  |
 | czw 13.05 18:00 | czeka |  |
 | czw 20.05 18:00 | czeka |  |
 | czw 27.05 18:00 | czeka |  |
@@ -109,6 +109,47 @@ Odświeżone: 23.11.2026 14:49
 | czw 27.07 18:00 | czeka |  |
 | czw 03.08 18:00 | czeka |  |
 | czw 10.08 18:00 | czeka |  |
+| czw 17.08 18:00 | czeka |  |
+| czw 24.08 18:00 | czeka |  |
+| czw 31.08 18:00 | czeka |  |
+| czw 07.09 18:00 | czeka |  |
+| czw 14.09 18:00 | czeka |  |
+| czw 21.09 18:00 | czeka |  |
+| czw 28.09 18:00 | czeka |  |
+| czw 05.10 18:00 | czeka |  |
+| czw 12.10 18:00 | czeka |  |
+| czw 19.10 18:00 | czeka |  |
+| czw 26.10 18:00 | czeka |  |
+| czw 02.11 18:00 | czeka |  |
+| czw 09.11 18:00 | czeka |  |
+| czw 16.11 18:00 | czeka |  |
+| czw 23.11 18:00 | czeka |  |
+| czw 30.11 18:00 | czeka |  |
+| czw 07.12 18:00 | czeka |  |
+| czw 14.12 18:00 | czeka |  |
+| czw 21.12 18:00 | czeka |  |
+| czw 28.12 18:00 | czeka |  |
+| czw 04.01 18:00 | czeka |  |
+| czw 11.01 18:00 | czeka |  |
+| czw 18.01 18:00 | czeka |  |
+| czw 25.01 18:00 | czeka |  |
+| czw 01.02 18:00 | czeka |  |
+| czw 08.02 18:00 | czeka |  |
+| czw 15.02 18:00 | czeka |  |
+| czw 22.02 18:00 | czeka |  |
+| czw 01.03 18:00 | czeka |  |
+| czw 08.03 18:00 | czeka |  |
+| czw 15.03 18:00 | czeka |  |
+| czw 22.03 18:00 | czeka |  |
+| czw 29.03 18:00 | czeka |  |
+| czw 05.04 18:00 | czeka |  |
+| czw 12.04 18:00 | czeka |  |
+| czw 19.04 18:00 | czeka |  |
+| czw 26.04 18:00 | czeka |  |
+| czw 03.05 18:00 | czeka |  |
+| czw 10.05 18:00 | czeka |  |
+| czw 17.05 18:00 | czeka |  |
+| czw 24.05 18:00 | czeka |  |
 | czw 31.05 18:00 | czeka |  |
 | czw 07.06 18:00 | czeka |  |
 | czw 14.06 18:00 | czeka |  |
