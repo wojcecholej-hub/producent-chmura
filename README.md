@@ -7,7 +7,7 @@ Odświeżone: 25.11.2026 17:00
 | Termin | Stan | Post |
 |---|---|---|
 | pon 23.11 18:00 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/DgF0y1yE7lB/) |
-| śr 25.11 17:00 | publikuję |  |
+| śr 25.11 17:00 | ✅ opublikowana | [otwórz](https://www.instagram.com/reel/DgK3fgLtIuT/) |
 | czw 26.11 18:00 | czeka |  |
 | czw 03.12 10:00 | czeka |  |
 | czw 03.12 18:00 | czeka |  |
