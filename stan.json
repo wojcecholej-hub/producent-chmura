@@ -723,9 +723,10 @@
    "zmieniono": 1795441733
   },
   "f52e941f5f2024bd70ef8a22948b8817": {
-   "stan": "tworzy",
+   "stan": "kontener",
    "kiedy": 1795712400,
-   "zmieniono": 1795710973
+   "zmieniono": 1795711020,
+   "kontener": "18123060365600619"
   },
   "ff6a0e5b4e35e948ea9788bfd1fbbaee": {
    "stan": "czeka",
