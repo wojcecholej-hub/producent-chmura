@@ -2,7 +2,7 @@
 
 Automat publikuje zaplanowane rolki o terminie (laptop może być wyłączony). Treść kolejki jest zaszyfrowana.
 
-Odświeżone: 27.11.2026 07:59
+Odświeżone: 27.11.2026 13:32
 
 | Termin | Stan | Post |
 |---|---|---|
